@@ -67,10 +67,12 @@ public class FriendRequestController {
     }
 
     @PatchMapping("/{id}/accept")
-    public ResponseEntity<?> acceptFriendRequest(@PathVariable Long id) {
+    public ResponseEntity<?> acceptFriendRequest(
+            @PathVariable Long id,
+            @RequestParam Long senderId,
+            @RequestParam Long receiverId) {
         try {
-
-            FriendRequest acceptedRequest = friendRequestService.acceptFriendRequest(id);
+            FriendRequest acceptedRequest = friendRequestService.acceptFriendRequest(id, senderId, receiverId);
             return ResponseEntity.ok(acceptedRequest);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -78,6 +80,7 @@ public class FriendRequestController {
             return ResponseEntity.status(500).body("Erreur interne du serveur.");
         }
     }
+
 
     @DeleteMapping("/{id}/decline")
     public ResponseEntity<String> declineFriendRequest(@PathVariable Long id) {

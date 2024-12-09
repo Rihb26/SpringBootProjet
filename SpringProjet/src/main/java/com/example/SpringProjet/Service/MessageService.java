@@ -1,11 +1,14 @@
 package com.example.SpringProjet.Service;
 
+import com.example.SpringProjet.Event.MessageDeletedEvent;
+import com.example.SpringProjet.Event.MessageUpdatedEvent;
 import com.example.SpringProjet.Repository.Conversation;
 import com.example.SpringProjet.Repository.ConversationRepository;
 import com.example.SpringProjet.Repository.Message;
 import com.example.SpringProjet.Repository.MessageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,12 +18,14 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
 
-    public MessageService(MessageRepository messageRepository, ConversationRepository conversationRepository) {
+    public MessageService(MessageRepository messageRepository, ConversationRepository conversationRepository, ApplicationEventPublisher eventPublisher) {
         this.messageRepository = messageRepository;
         this.conversationRepository = conversationRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public Message sendMessage(Long conversationId, Long senderId, String content) {
@@ -77,23 +82,22 @@ public class MessageService {
     }
 
     public Message updateMessage(Long id, String newContent) {
-        logger.info("Mise à jour du message : messageId={}, newContent={}", id, newContent);
 
         Message message = messageRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.error("Le message avec ID {} n'a pas été trouvé.", id);
-                    return new RuntimeException("Message not found with id: " + id);
-                });
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+
+        String oldContent = message.getContent();
+        message.setContent(newContent);
 
         message.setContent(newContent);
 
         Message updatedMessage = messageRepository.save(message);
-        logger.info("Message mis à jour avec succès : messageId={}", updatedMessage.getId());
+        eventPublisher.publishEvent(new MessageUpdatedEvent(this, message.getId(), oldContent, newContent));
         return updatedMessage;
     }
 
     public void deleteMessage(Long id) {
-        logger.info("Suppression du message : messageId={}", id);
+
 
         Message message = messageRepository.findById(id)
                 .orElseThrow(() -> {
@@ -101,7 +105,13 @@ public class MessageService {
                     return new RuntimeException("Message not found with ID: " + id);
                 });
 
+        // Supprimer le message
         messageRepository.deleteById(id);
-        logger.info("Message supprimé avec succès : messageId={}", id);
+
+        // Publier l'événement pour signaler que le message a été supprimé
+        eventPublisher.publishEvent(new MessageDeletedEvent(this, id));
+
+
     }
+
 }

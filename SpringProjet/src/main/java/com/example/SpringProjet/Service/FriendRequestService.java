@@ -1,9 +1,12 @@
 package com.example.SpringProjet.Service;
 
+import com.example.SpringProjet.Event.FriendRequestAcceptedEvent;
+import com.example.SpringProjet.Event.FriendRequestReceivedEvent;
 import com.example.SpringProjet.Repository.FriendRequest;
 import com.example.SpringProjet.Repository.FriendRequestRepository;
 import com.example.SpringProjet.Repository.Notification;
 import com.example.SpringProjet.Repository.NotificationRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,10 +17,13 @@ public class FriendRequestService {
 
     private final FriendRequestRepository friendRequestRepository;
     private final NotificationRepository notificationRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public FriendRequestService(FriendRequestRepository friendRequestRepository, NotificationRepository notificationRepository) {
+
+    public FriendRequestService(FriendRequestRepository friendRequestRepository, NotificationRepository notificationRepository,ApplicationEventPublisher eventPublisher) {
         this.friendRequestRepository = friendRequestRepository;
         this.notificationRepository = notificationRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public FriendRequest sendFriendRequest(Long senderId, Long receiverId) {
@@ -28,7 +34,7 @@ public class FriendRequestService {
         if (senderId.equals(receiverId)) {
             throw new IllegalArgumentException("Un utilisateur ne peut pas s'envoyer une demande d'ami à lui-même.");
         }
-
+        eventPublisher.publishEvent(new FriendRequestReceivedEvent(this, receiverId, senderId));
         return friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, "PENDING")
                 .orElseGet(() -> {
                     FriendRequest friendRequest = new FriendRequest();
@@ -41,13 +47,6 @@ public class FriendRequestService {
 
 
                     System.out.println("Création de la notification pour l'utilisateur : " + receiverId);
-                    Notification notification = new Notification();
-                    notification.setUserId(receiverId);
-                    notification.setMessage("Vous avez reçu une nouvelle demande d'ami de l'utilisateur " + senderId);
-                    notification.setCreatedAt(LocalDateTime.now());
-
-                    notificationRepository.save(notification);
-                    System.out.println("Notification enregistrée avec succès.");
 
                     return savedRequest;
                 });
@@ -68,7 +67,7 @@ public class FriendRequestService {
         return friendRequestRepository.findByReceiverId(receiverId);
     }
 
-    public FriendRequest acceptFriendRequest(Long requestId) {
+    public FriendRequest acceptFriendRequest(Long requestId,Long senderId, Long receiverId) {
 
         FriendRequest friendRequest = friendRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("La demande d'ami n'existe pas."));
@@ -81,6 +80,8 @@ public class FriendRequestService {
 
         friendRequest.setStatus("ACCEPTED");
         friendRequestRepository.save(friendRequest);
+
+        eventPublisher.publishEvent(new FriendRequestAcceptedEvent(this, receiverId, senderId));
 
 
         Notification notification = new Notification();
