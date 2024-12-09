@@ -39,7 +39,7 @@ public class FriendRequestService {
 
                     FriendRequest savedRequest = friendRequestRepository.save(friendRequest);
 
-                    // Ajoutez ces logs pour déboguer
+
                     System.out.println("Création de la notification pour l'utilisateur : " + receiverId);
                     Notification notification = new Notification();
                     notification.setUserId(receiverId);
@@ -69,20 +69,20 @@ public class FriendRequestService {
     }
 
     public FriendRequest acceptFriendRequest(Long requestId) {
-        // Récupérer la demande d'ami par son ID
+
         FriendRequest friendRequest = friendRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("La demande d'ami n'existe pas."));
 
-        // Vérifier que la demande est toujours en attente
+
         if (!friendRequest.getStatus().equals("PENDING")) {
             throw new IllegalArgumentException("La demande d'ami n'est pas en attente.");
         }
 
-        // Mettre à jour le statut de la demande à ACCEPTED
+
         friendRequest.setStatus("ACCEPTED");
         friendRequestRepository.save(friendRequest);
 
-        // Créer une notification pour l'expéditeur
+
         Notification notification = new Notification();
         notification.setUserId(friendRequest.getSenderId());
         notification.setMessage("Votre demande d'ami a été acceptée par l'utilisateur " + friendRequest.getReceiverId());
@@ -91,6 +91,23 @@ public class FriendRequestService {
         notificationRepository.save(notification);
 
         return friendRequest;
+    }
+
+    public void declineFriendRequest(Long requestId) {
+        FriendRequest friendRequest = friendRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Friend request not found with ID: " + requestId));
+
+        friendRequest.setStatus("DECLINED");
+        friendRequestRepository.save(friendRequest);
+    }
+
+    public void cancelFriendRequest(Long id) {
+
+        FriendRequest friendRequest = friendRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Friend request not found with ID: " + id));
+
+
+        friendRequestRepository.deleteById(id);
     }
 
 }

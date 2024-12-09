@@ -37,13 +37,13 @@ public class NotificationController {
      */
     @PatchMapping("/mark-read")
     public ResponseEntity<String> markNotificationsAsRead(@RequestParam Long userId) {
-        // Récupérer les notifications non lues
+
         List<Notification> notifications = notificationRepository.findByUserIdAndIsReadFalse(userId);
 
-        // Marquer chaque notification comme lue
+
         notifications.forEach(notification -> notification.setRead(true));
 
-        // Sauvegarder les modifications
+
         notificationRepository.saveAll(notifications);
 
         return ResponseEntity.ok("Toutes les notifications ont été marquées comme lues.");
@@ -61,14 +61,14 @@ public class NotificationController {
             @RequestParam Long userId,
             @RequestParam String message
     ) {
-        // Créer une nouvelle notification
+
         Notification notification = new Notification();
         notification.setUserId(userId);
         notification.setMessage(message);
         notification.setRead(false);
         notification.setCreatedAt(java.time.LocalDateTime.now());
 
-        // Sauvegarder la notification
+
         Notification savedNotification = notificationRepository.save(notification);
 
         return ResponseEntity.ok(savedNotification);

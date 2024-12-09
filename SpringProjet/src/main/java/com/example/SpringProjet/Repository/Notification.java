@@ -16,18 +16,18 @@ public class Notification {
     private Long id;
 
     @Column(nullable = false)
-    private Long userId; // L'utilisateur qui reçoit la notification
+    private Long userId;
 
     @Column(nullable = false)
-    private String message; // Le message de notification
+    private String message;
 
     @Column(nullable = false)
-    private boolean isRead = false; // Indique si la notification est lue (par défaut : false)
+    private boolean isRead = false;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt; // Date de création de la notification
+    private LocalDateTime createdAt;
 
-    // Getters et setters
+
 
     public Long getId() {
         return id;

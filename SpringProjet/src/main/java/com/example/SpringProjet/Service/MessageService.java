@@ -20,41 +20,62 @@ public class MessageService {
     }
 
     public Message sendMessage(Long conversationId, Long senderId, String content) {
-        // Vérifiez que la conversation existe
+
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new IllegalArgumentException("La conversation n'existe pas."));
 
-        // Créez un nouveau message
+
         Message message = new Message();
         message.setConversation(conversation);
         message.setSenderId(senderId);
         message.setContent(content);
-        message.setRead(false); // Nouveau message est marqué comme "non lu" par défaut
+        message.setRead(false);
 
-        // Sauvegardez le message
+
         return messageRepository.save(message);
     }
 
     public List<Message> getMessages(Long conversationId) {
-        // Récupère tous les messages d'une conversation donnée
+
         return messageRepository.findByConversationId(conversationId);
     }
 
     public void markMessagesAsRead(Long conversationId) {
-        // Récupère tous les messages non lus d'une conversation donnée
+
         List<Message> unreadMessages = messageRepository.findByConversationIdAndIsReadFalse(conversationId);
 
-        // Marquer les messages comme lus
+
         for (Message message : unreadMessages) {
             message.setRead(true);
         }
 
-        // Sauvegarder les modifications
+
         messageRepository.saveAll(unreadMessages);
     }
 
     public List<Message> getUnreadMessages(Long conversationId) {
-        // Récupère tous les messages non lus d'une conversation donnée
+
         return messageRepository.findByConversationIdAndIsReadFalse(conversationId);
+    }
+
+    public Message updateMessage(Long id, String newContent) {
+
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found with id: " + id));
+
+
+        message.setContent(newContent);
+
+
+        return messageRepository.save(message);
+    }
+
+    public void deleteMessage(Long id) {
+
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found with ID: " + id));
+
+
+        messageRepository.deleteById(id);
     }
 }

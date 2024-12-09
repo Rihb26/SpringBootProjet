@@ -25,7 +25,7 @@ public class FriendRequest {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // Getters and setters
+
     public Long getId() {
         return id;
     }

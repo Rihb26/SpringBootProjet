@@ -37,4 +37,18 @@ public class MessageController {
         List<Message> messages = messageService.getMessages(conversationId);
         return ResponseEntity.ok(messages);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Message> updateMessage(
+            @PathVariable Long id,
+            @RequestBody String newContent) {
+        Message updatedMessage = messageService.updateMessage(id, newContent);
+        return ResponseEntity.ok(updatedMessage);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteMessage(@PathVariable Long id) {
+        messageService.deleteMessage(id);
+        return ResponseEntity.ok("Message deleted successfully");
+    }
 }

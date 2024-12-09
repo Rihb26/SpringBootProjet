@@ -128,5 +128,5 @@ public class File {
     public void setSize(Long size) {
         this.size = size;
     }
-// Getters and setters...
+
 }

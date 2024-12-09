@@ -21,7 +21,7 @@ public class Conversation {
     @Column(name = "last_message_time")
     private LocalDateTime lastMessageTime;
 
-    // Getters and setters
+
     public Long getId() {
         return id;
     }

@@ -25,7 +25,7 @@ public class Message {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false; // Nouveau champ, par défaut "non lu"
 
-    // Getters and Setters
+
     public Long getId() {
         return id;
     }
