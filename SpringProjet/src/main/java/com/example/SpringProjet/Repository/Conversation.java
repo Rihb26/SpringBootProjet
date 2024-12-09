@@ -1,56 +1,61 @@
 package com.example.SpringProjet.Repository;
 
-
-
+import com.example.SpringProjet.Dto.ConversationSnapshot;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "conversations")
 public class Conversation {
 
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String message;
 
-    @Column(name = "last_message")
     private String lastMessage;
 
-    @Column(name = "last_message_time")
+
+    private String name;
+
+
     private LocalDateTime lastMessageTime;
 
-    // Getters and setters
-    public Long getId() {
-        return id;
+    @Version
+    private Integer version;
+
+    protected Conversation() {
+        // Constructeur par défaut requis par JPA
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public Conversation(String name) {
         this.name = name;
+        this.lastMessage = "";
+        this.lastMessageTime = LocalDateTime.now();
     }
 
-    public String getLastMessage() {
-        return lastMessage;
+    public void updateLastMessage(String message) {
+        this.lastMessage = message;
+        this.lastMessageTime = LocalDateTime.now();
     }
 
-    public void setLastMessage(String lastMessage) {
-        this.lastMessage = lastMessage;
+    public ConversationSnapshot toSnapshot() {
+        return new ConversationSnapshot(id, name, lastMessage, lastMessageTime);
     }
 
-    public LocalDateTime getLastMessageTime() {
-        return lastMessageTime;
+
+    public Long getId() {
+        return this.id;
     }
 
-    public void setLastMessageTime(LocalDateTime lastMessageTime) {
-        this.lastMessageTime = lastMessageTime;
+    public void setId(  Long conversationId) {
+        this.id = conversationId;
     }
 }

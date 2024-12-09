@@ -1,9 +1,6 @@
 package com.example.SpringProjet.Repository;
 
-
-
-
-
+import com.example.SpringProjet.Dto.NotificationSnapshot;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -22,51 +19,27 @@ public class Notification {
     private String message; // Le message de notification
 
     @Column(nullable = false)
-    private boolean isRead = false; // Indique si la notification est lue (par défaut : false)
+    private boolean isRead = false; // Indique si la notification est lue
 
     @Column(nullable = false)
-    private LocalDateTime createdAt; // Date de création de la notification
+    private LocalDateTime createdAt = LocalDateTime.now(); // Date de création de la notification
 
-    // Getters et setters
-
-    public Long getId() {
-        return id;
+    // Constructeurs (obligatoire pour Hibernate)
+    protected Notification() {
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
+    public Notification(Long userId, String message) {
         this.userId = userId;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
         this.message = message;
+        this.isRead = false;
+        this.createdAt = LocalDateTime.now();
     }
 
-    public boolean isRead() {
-        return isRead;
+    public NotificationSnapshot toSnapshot() {
+        return new NotificationSnapshot(id, userId, message, isRead, createdAt);
     }
 
-    public void setRead(boolean read) {
-        this.isRead = read;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void markAsRead() {
+        this.isRead = true;
     }
 }
-

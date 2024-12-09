@@ -2,6 +2,7 @@ package com.example.SpringProjet.Service;
 
 
 
+import com.example.SpringProjet.Dto.MessageSnapshot;
 import com.example.SpringProjet.Repository.Conversation;
 import com.example.SpringProjet.Repository.ConversationRepository;
 import com.example.SpringProjet.Repository.Message;
@@ -21,22 +22,20 @@ public class MessageService {
         this.conversationRepository = conversationRepository;
     }
 
-    public Message sendMessage(Long conversationId, Long senderId, String content) {
-        // Vérifiez que la conversation existe
+    public MessageSnapshot sendMessage(Long conversationId, Long senderId, String content) {
         Conversation conversation = conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new IllegalArgumentException("La conversation n'existe pas."));
+                .orElseThrow(() -> new IllegalArgumentException("Conversation inexistante."));
 
-        // Créez un nouveau message
-        Message message = new Message();
-        message.setConversation(conversation);
-        message.setSenderId(senderId);
-        message.setContent(content);
+        Message message = new Message(conversation, senderId, content);
+        Message savedMessage = messageRepository.save(message);
 
-        // Sauvegardez le message
-        return messageRepository.save(message);
+        return savedMessage.toSnapshot();
     }
 
-    public List<Message> getMessages(Long conversationId) {
-        return messageRepository.findByConversationId(conversationId);
+    public List<MessageSnapshot> getMessages(Long conversationId) {
+        return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId)
+                .stream()
+                .map(Message::toSnapshot)
+                .toList();
     }
 }

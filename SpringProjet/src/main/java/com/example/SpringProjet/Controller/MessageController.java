@@ -1,9 +1,7 @@
 package com.example.SpringProjet.Controller;
 
-
-
-import com.example.SpringProjet.Repository.Message;
 import com.example.SpringProjet.Service.MessageService;
+import com.example.SpringProjet.Dto.MessageSnapshot;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,22 +17,25 @@ public class MessageController {
         this.messageService = messageService;
     }
 
+    // Endpoint pour envoyer un message
     @PostMapping("/send")
-    public ResponseEntity<Message> sendMessage(
+    public ResponseEntity<MessageSnapshot> sendMessage(
             @RequestParam Long conversationId,
             @RequestParam Long senderId,
             @RequestParam String content) {
         try {
-            Message message = messageService.sendMessage(conversationId, senderId, content);
-            return ResponseEntity.ok(message);
-        } catch (Exception e) {
+            MessageSnapshot messageSnapshot = messageService.sendMessage(conversationId, senderId, content);
+            return ResponseEntity.ok(messageSnapshot);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null);
         }
     }
 
+    // Endpoint pour récupérer les messages d'une conversation
     @GetMapping("/{conversationId}")
-    public ResponseEntity<List<Message>> getMessages(@PathVariable Long conversationId) {
-        List<Message> messages = messageService.getMessages(conversationId);
+    public ResponseEntity<List<MessageSnapshot>> getMessages(@PathVariable Long conversationId) {
+        List<MessageSnapshot> messages = messageService.getMessages(conversationId);
         return ResponseEntity.ok(messages);
     }
 }
+

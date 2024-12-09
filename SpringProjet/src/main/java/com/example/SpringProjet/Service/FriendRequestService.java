@@ -1,5 +1,6 @@
 package com.example.SpringProjet.Service;
 
+import com.example.SpringProjet.Dto.FriendRequestSnapshot;
 import com.example.SpringProjet.Repository.FriendRequest;
 import com.example.SpringProjet.Repository.FriendRequestRepository;
 import com.example.SpringProjet.Repository.Notification;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FriendRequestService {
@@ -20,7 +22,63 @@ public class FriendRequestService {
         this.notificationRepository = notificationRepository;
     }
 
-    public FriendRequest sendFriendRequest(Long senderId, Long receiverId) {
+    public FriendRequestSnapshot sendFriendRequest(Long senderId, Long receiverId) {
+        validateSenderAndReceiver(senderId, receiverId);
+
+        // Vérifie si une demande en attente existe déjà
+        return friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, "PENDING")
+                .map(FriendRequest::toSnapshot)
+                .orElseGet(() -> {
+                    // Création de la demande d'ami
+                    FriendRequest friendRequest = new FriendRequest(senderId, receiverId);
+                    FriendRequest savedRequest = friendRequestRepository.save(friendRequest);
+
+                    // Création de la notification pour le destinataire
+                    Notification notification = new Notification(receiverId,
+                            "Vous avez reçu une nouvelle demande d'ami de l'utilisateur " + senderId);
+                    notificationRepository.save(notification);
+
+                    return savedRequest.toSnapshot();
+                });
+    }
+
+    public List<FriendRequestSnapshot> getSentRequests(Long senderId) {
+        validateUserId(senderId, "L'ID de l'expéditeur ne peut pas être nul.");
+        return friendRequestRepository.findBySenderId(senderId)
+                .stream()
+                .map(FriendRequest::toSnapshot)
+                .collect(Collectors.toList());
+    }
+
+    public List<FriendRequestSnapshot> getReceivedRequests(Long receiverId) {
+        validateUserId(receiverId, "L'ID du destinataire ne peut pas être nul.");
+        return friendRequestRepository.findByReceiverId(receiverId)
+                .stream()
+                .map(FriendRequest::toSnapshot)
+                .collect(Collectors.toList());
+    }
+
+    public FriendRequestSnapshot acceptFriendRequest(Long requestId) {
+        FriendRequest friendRequest = friendRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("La demande d'ami n'existe pas."));
+
+        if (!"PENDING".equals(friendRequest.toSnapshot().status())) {
+            throw new IllegalArgumentException("Cette demande d'ami n'est pas en attente.");
+        }
+
+        // Accepter la demande
+        friendRequest.accept();
+        FriendRequest updatedRequest = friendRequestRepository.save(friendRequest);
+
+        // Notification pour l'expéditeur
+        Notification notification = new Notification(updatedRequest.toSnapshot().senderId(),
+                "Votre demande d'ami a été acceptée par l'utilisateur " + updatedRequest.toSnapshot().receiverId());
+        notificationRepository.save(notification);
+
+        return updatedRequest.toSnapshot();
+    }
+
+    private void validateSenderAndReceiver(Long senderId, Long receiverId) {
         if (senderId == null || receiverId == null) {
             throw new IllegalArgumentException("Les IDs de l'expéditeur et du destinataire ne peuvent pas être nuls.");
         }
@@ -28,69 +86,11 @@ public class FriendRequestService {
         if (senderId.equals(receiverId)) {
             throw new IllegalArgumentException("Un utilisateur ne peut pas s'envoyer une demande d'ami à lui-même.");
         }
-
-        return friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, "PENDING")
-                .orElseGet(() -> {
-                    FriendRequest friendRequest = new FriendRequest();
-                    friendRequest.setSenderId(senderId);
-                    friendRequest.setReceiverId(receiverId);
-                    friendRequest.setStatus("PENDING");
-                    friendRequest.setCreatedAt(LocalDateTime.now());
-
-                    FriendRequest savedRequest = friendRequestRepository.save(friendRequest);
-
-                    // Ajoutez ces logs pour déboguer
-                    System.out.println("Création de la notification pour l'utilisateur : " + receiverId);
-                    Notification notification = new Notification();
-                    notification.setUserId(receiverId);
-                    notification.setMessage("Vous avez reçu une nouvelle demande d'ami de l'utilisateur " + senderId);
-                    notification.setCreatedAt(LocalDateTime.now());
-
-                    notificationRepository.save(notification);
-                    System.out.println("Notification enregistrée avec succès.");
-
-                    return savedRequest;
-                });
     }
 
-
-    public List<FriendRequest> getSentRequests(Long senderId) {
-        if (senderId == null) {
-            throw new IllegalArgumentException("L'ID de l'expéditeur ne peut pas être nul.");
+    private void validateUserId(Long userId, String errorMessage) {
+        if (userId == null) {
+            throw new IllegalArgumentException(errorMessage);
         }
-        return friendRequestRepository.findBySenderId(senderId);
     }
-
-    public List<FriendRequest> getReceivedRequests(Long receiverId) {
-        if (receiverId == null) {
-            throw new IllegalArgumentException("L'ID du destinataire ne peut pas être nul.");
-        }
-        return friendRequestRepository.findByReceiverId(receiverId);
-    }
-
-    public FriendRequest acceptFriendRequest(Long requestId) {
-        // Récupérer la demande d'ami par son ID
-        FriendRequest friendRequest = friendRequestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("La demande d'ami n'existe pas."));
-
-        // Vérifier que la demande est toujours en attente
-        if (!friendRequest.getStatus().equals("PENDING")) {
-            throw new IllegalArgumentException("La demande d'ami n'est pas en attente.");
-        }
-
-        // Mettre à jour le statut de la demande à ACCEPTED
-        friendRequest.setStatus("ACCEPTED");
-        friendRequestRepository.save(friendRequest);
-
-        // Créer une notification pour l'expéditeur
-        Notification notification = new Notification();
-        notification.setUserId(friendRequest.getSenderId());
-        notification.setMessage("Votre demande d'ami a été acceptée par l'utilisateur " + friendRequest.getReceiverId());
-        notification.setCreatedAt(LocalDateTime.now());
-        notification.setRead(false);
-        notificationRepository.save(notification);
-
-        return friendRequest;
-    }
-
 }

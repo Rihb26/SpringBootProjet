@@ -1,7 +1,6 @@
 package com.example.SpringProjet.Repository;
 
-
-
+import com.example.SpringProjet.Dto.FriendRequestSnapshot;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -25,44 +24,32 @@ public class FriendRequest {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // Getters and setters
-    public Long getId() {
-        return id;
+    protected FriendRequest() {
+        // Constructeur requis par JPA
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getSenderId() {
-        return senderId;
-    }
-
-    public void setSenderId(Long senderId) {
+    public FriendRequest(Long senderId, Long receiverId) {
         this.senderId = senderId;
-    }
-
-    public Long getReceiverId() {
-        return receiverId;
-    }
-
-    public void setReceiverId(Long receiverId) {
         this.receiverId = receiverId;
+        this.status = "PENDING";
+        this.createdAt = LocalDateTime.now();
     }
 
-    public String getStatus() {
-        return status;
+    public void accept() {
+        if (!"PENDING".equals(this.status)) {
+            throw new IllegalArgumentException("La demande ne peut être acceptée que si elle est en attente.");
+        }
+        this.status = "ACCEPTED";
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void reject() {
+        if (!"PENDING".equals(this.status)) {
+            throw new IllegalArgumentException("La demande ne peut être rejetée que si elle est en attente.");
+        }
+        this.status = "REJECTED";
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public FriendRequestSnapshot toSnapshot() {
+        return new FriendRequestSnapshot(id, senderId, receiverId, status, createdAt);
     }
 }

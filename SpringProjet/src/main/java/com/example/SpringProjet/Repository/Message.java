@@ -1,17 +1,18 @@
 package com.example.SpringProjet.Repository;
 
-
-
+import com.example.SpringProjet.Dto.MessageSnapshot;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "messages")
 public class Message {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", nullable = false)
     private Conversation conversation;
 
@@ -22,46 +23,41 @@ public class Message {
     private String content;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Conversation getConversation() {
-        return conversation;
-    }
-
-    public void setConversation(Conversation conversation) {
+    public Message(Conversation conversation, Long senderId, String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le contenu ne peut pas être vide.");
+        }
+        if (conversation == null) {
+            throw new IllegalArgumentException("La conversation est obligatoire.");
+        }
         this.conversation = conversation;
-    }
-
-    public Long getSenderId() {
-        return senderId;
-    }
-
-    public void setSenderId(Long senderId) {
         this.senderId = senderId;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
         this.content = content;
+        this.createdAt = LocalDateTime.now();
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public Message() {
+
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+
+    public MessageSnapshot toSnapshot() {
+        return new MessageSnapshot(
+                id,
+                conversation.getId(),
+                senderId,
+                content,
+                createdAt
+        );
+    }
+
+    public void updateContent(String newContent) {
+        if (newContent == null || newContent.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le contenu mis à jour ne peut pas être vide.");
+        }
+        this.content = newContent;
     }
 }

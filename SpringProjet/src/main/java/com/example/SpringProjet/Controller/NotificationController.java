@@ -1,14 +1,7 @@
 package com.example.SpringProjet.Controller;
 
-
-
-
-
-
-
-
-import com.example.SpringProjet.Repository.Notification;
-import com.example.SpringProjet.Repository.NotificationRepository;
+import com.example.SpringProjet.Dto.NotificationSnapshot;
+import com.example.SpringProjet.Service.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,44 +11,33 @@ import java.util.List;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
-    public NotificationController(NotificationRepository notificationRepository) {
-        this.notificationRepository = notificationRepository;
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
     }
 
-    /**
-     * Récupérer les notifications non lues d'un utilisateur.
-     *
-     * @param userId ID de l'utilisateur pour lequel récupérer les notifications.
-     * @return Liste des notifications non lues.
-     */
-    @GetMapping
-    public ResponseEntity<List<Notification>> getUnreadNotifications(@RequestParam Long userId) {
-        List<Notification> notifications = notificationRepository.findByUserIdAndIsReadFalse(userId);
-        return ResponseEntity.ok(notifications);
+    @PostMapping("/create")
+    public ResponseEntity<NotificationSnapshot> createNotification(
+            @RequestParam Long userId,
+            @RequestParam String message) {
+        NotificationSnapshot snapshot = notificationService.createNotification(userId, message);
+        return ResponseEntity.ok(snapshot);
     }
 
-    /**
-     * Marquer toutes les notifications comme lues pour un utilisateur.
-     *
-     * @param userId ID de l'utilisateur pour lequel marquer les notifications comme lues.
-     * @return Message confirmant l'opération.
-     */
-    @PatchMapping("/mark-read")
-    public ResponseEntity<String> markNotificationsAsRead(@RequestParam Long userId) {
-        // Récupérer les notifications non lues
-        List<Notification> notifications = notificationRepository.findByUserIdAndIsReadFalse(userId);
+    @GetMapping("/unread/{userId}")
+    public ResponseEntity<List<NotificationSnapshot>> getUnreadNotifications(@PathVariable Long userId) {
+        List<NotificationSnapshot> snapshots = notificationService.getUnreadNotifications(userId);
+        return ResponseEntity.ok(snapshots);
+    }
 
-        // Marquer chaque notification comme lue
-        for (Notification notification : notifications) {
-            notification.setRead(true);
+    @PostMapping("/read/{notificationId}")
+    public ResponseEntity<String> markAsRead(@PathVariable Long notificationId) {
+        try {
+            notificationService.markNotificationAsRead(notificationId);
+            return ResponseEntity.ok("Notification marquée comme lue.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        // Sauvegarder les modifications
-        notificationRepository.saveAll(notifications);
-
-        return ResponseEntity.ok("Toutes les notifications ont été marquées comme lues.");
     }
 }
-
