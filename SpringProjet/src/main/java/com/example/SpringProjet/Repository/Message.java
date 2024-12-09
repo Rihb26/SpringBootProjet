@@ -1,7 +1,5 @@
 package com.example.SpringProjet.Repository;
 
-
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -23,6 +21,9 @@ public class Message {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead = false; // Nouveau champ, par défaut "non lu"
 
     // Getters and Setters
     public Long getId() {
@@ -63,5 +64,13 @@ public class Message {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
     }
 }

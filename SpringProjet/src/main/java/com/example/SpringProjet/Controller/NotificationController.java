@@ -1,12 +1,5 @@
 package com.example.SpringProjet.Controller;
 
-
-
-
-
-
-
-
 import com.example.SpringProjet.Repository.Notification;
 import com.example.SpringProjet.Repository.NotificationRepository;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +18,12 @@ public class NotificationController {
     }
 
     /**
-     * Récupérer les notifications non lues d'un utilisateur.
+     * Récupérer les notifications non lues d'un utilisateur via un endpoint explicite.
      *
-     * @param userId ID de l'utilisateur pour lequel récupérer les notifications.
+     * @param userId ID de l'utilisateur pour lequel récupérer les notifications non lues.
      * @return Liste des notifications non lues.
      */
-    @GetMapping
+    @GetMapping("/unread")
     public ResponseEntity<List<Notification>> getUnreadNotifications(@RequestParam Long userId) {
         List<Notification> notifications = notificationRepository.findByUserIdAndIsReadFalse(userId);
         return ResponseEntity.ok(notifications);
@@ -48,14 +41,36 @@ public class NotificationController {
         List<Notification> notifications = notificationRepository.findByUserIdAndIsReadFalse(userId);
 
         // Marquer chaque notification comme lue
-        for (Notification notification : notifications) {
-            notification.setRead(true);
-        }
+        notifications.forEach(notification -> notification.setRead(true));
 
         // Sauvegarder les modifications
         notificationRepository.saveAll(notifications);
 
         return ResponseEntity.ok("Toutes les notifications ont été marquées comme lues.");
     }
-}
 
+    /**
+     * Créer une notification personnalisée pour un utilisateur.
+     *
+     * @param userId  ID de l'utilisateur recevant la notification.
+     * @param message Contenu de la notification.
+     * @return La notification créée.
+     */
+    @PostMapping("/create")
+    public ResponseEntity<Notification> createNotification(
+            @RequestParam Long userId,
+            @RequestParam String message
+    ) {
+        // Créer une nouvelle notification
+        Notification notification = new Notification();
+        notification.setUserId(userId);
+        notification.setMessage(message);
+        notification.setRead(false);
+        notification.setCreatedAt(java.time.LocalDateTime.now());
+
+        // Sauvegarder la notification
+        Notification savedNotification = notificationRepository.save(notification);
+
+        return ResponseEntity.ok(savedNotification);
+    }
+}

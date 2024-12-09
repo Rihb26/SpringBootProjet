@@ -1,7 +1,5 @@
 package com.example.SpringProjet.Service;
 
-
-
 import com.example.SpringProjet.Repository.Conversation;
 import com.example.SpringProjet.Repository.ConversationRepository;
 import com.example.SpringProjet.Repository.Message;
@@ -31,12 +29,32 @@ public class MessageService {
         message.setConversation(conversation);
         message.setSenderId(senderId);
         message.setContent(content);
+        message.setRead(false); // Nouveau message est marqué comme "non lu" par défaut
 
         // Sauvegardez le message
         return messageRepository.save(message);
     }
 
     public List<Message> getMessages(Long conversationId) {
+        // Récupère tous les messages d'une conversation donnée
         return messageRepository.findByConversationId(conversationId);
+    }
+
+    public void markMessagesAsRead(Long conversationId) {
+        // Récupère tous les messages non lus d'une conversation donnée
+        List<Message> unreadMessages = messageRepository.findByConversationIdAndIsReadFalse(conversationId);
+
+        // Marquer les messages comme lus
+        for (Message message : unreadMessages) {
+            message.setRead(true);
+        }
+
+        // Sauvegarder les modifications
+        messageRepository.saveAll(unreadMessages);
+    }
+
+    public List<Message> getUnreadMessages(Long conversationId) {
+        // Récupère tous les messages non lus d'une conversation donnée
+        return messageRepository.findByConversationIdAndIsReadFalse(conversationId);
     }
 }
