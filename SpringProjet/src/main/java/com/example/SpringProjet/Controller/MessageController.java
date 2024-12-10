@@ -3,8 +3,11 @@ package com.example.SpringProjet.Controller;
 
 
 import com.example.SpringProjet.Repository.Message;
+import com.example.SpringProjet.Repository.User;
+import com.example.SpringProjet.Repository.UserRepository;
 import com.example.SpringProjet.Service.MessageService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,22 +17,27 @@ import java.util.List;
 public class MessageController {
 
     private final MessageService messageService;
+    private final UserRepository userRepository;
 
-    public MessageController(MessageService messageService) {
+    public MessageController(MessageService messageService, UserRepository userRepository) {
         this.messageService = messageService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/send")
     public ResponseEntity<Message> sendMessage(
             @RequestParam Long conversationId,
-            @RequestParam Long senderId,
             @RequestParam String content) {
-        try {
-            Message message = messageService.sendMessage(conversationId, senderId, content);
-            return ResponseEntity.ok(message);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+        // Récupère l'utilisateur connecté via le contexte de sécurité
+        String senderUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        // Utilise l'instance injectée de UserRepository
+        User sender = userRepository.findByUsername(senderUsername)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Appelle le service avec l'ID du sender
+        Message message = messageService.sendMessage(conversationId, sender.getId(), content);
+        return ResponseEntity.ok(message);
     }
 
     @GetMapping("/{conversationId}")

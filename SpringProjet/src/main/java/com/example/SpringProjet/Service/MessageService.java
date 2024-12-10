@@ -2,10 +2,7 @@ package com.example.SpringProjet.Service;
 
 import com.example.SpringProjet.Event.MessageDeletedEvent;
 import com.example.SpringProjet.Event.MessageUpdatedEvent;
-import com.example.SpringProjet.Repository.Conversation;
-import com.example.SpringProjet.Repository.ConversationRepository;
-import com.example.SpringProjet.Repository.Message;
-import com.example.SpringProjet.Repository.MessageRepository;
+import com.example.SpringProjet.Repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,13 +16,15 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserRepository userRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
 
-    public MessageService(MessageRepository messageRepository, ConversationRepository conversationRepository, ApplicationEventPublisher eventPublisher) {
+    public MessageService(MessageRepository messageRepository, ConversationRepository conversationRepository, ApplicationEventPublisher eventPublisher, UserRepository userRepository) {
         this.messageRepository = messageRepository;
         this.conversationRepository = conversationRepository;
         this.eventPublisher = eventPublisher;
+        this.userRepository = userRepository;
     }
 
     public Message sendMessage(Long conversationId, Long senderId, String content) {

@@ -20,7 +20,7 @@ public class FriendRequest {
     private Long receiverId;
 
     @Column(name = "status", nullable = false)
-    private String status; // PENDING, ACCEPTED, REJECTED
+    private String status;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
