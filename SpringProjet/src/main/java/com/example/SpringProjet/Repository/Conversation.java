@@ -1,7 +1,5 @@
 package com.example.SpringProjet.Repository;
 
-
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -13,7 +11,8 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @Column(name = "participant", nullable = false)
+    private String participant; // Nom ou identifiant du participant
 
     @Column(name = "last_message")
     private String lastMessage;
@@ -21,7 +20,7 @@ public class Conversation {
     @Column(name = "last_message_time")
     private LocalDateTime lastMessageTime;
 
-
+    // Getters et setters
     public Long getId() {
         return id;
     }
@@ -30,12 +29,12 @@ public class Conversation {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getParticipant() {
+        return participant;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setParticipant(String participant) {
+        this.participant = participant;
     }
 
     public String getLastMessage() {

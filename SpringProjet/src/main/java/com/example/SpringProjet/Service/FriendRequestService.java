@@ -42,13 +42,7 @@ public class FriendRequestService {
                     friendRequest.setReceiverId(receiverId);
                     friendRequest.setStatus("PENDING");
                     friendRequest.setCreatedAt(LocalDateTime.now());
-
-                    FriendRequest savedRequest = friendRequestRepository.save(friendRequest);
-
-
-                    System.out.println("Création de la notification pour l'utilisateur : " + receiverId);
-
-                    return savedRequest;
+                    return friendRequestRepository.save(friendRequest);
                 });
     }
 
@@ -95,12 +89,17 @@ public class FriendRequestService {
     }
 
     public void declineFriendRequest(Long requestId) {
-        FriendRequest friendRequest = friendRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Friend request not found with ID: " + requestId));
+        // Recherche la demande d'ami
+        FriendRequest requestToDecline = friendRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Friend request not found"));
 
-        friendRequest.setStatus("DECLINED");
-        friendRequestRepository.save(friendRequest);
+        // Mettre à jour le statut de la demande d'ami
+        requestToDecline.setStatus("DECLINED");
+
+        // Sauvegarder la demande d'ami après modification
+        friendRequestRepository.save(requestToDecline);
     }
+
 
     public void cancelFriendRequest(Long id) {
 

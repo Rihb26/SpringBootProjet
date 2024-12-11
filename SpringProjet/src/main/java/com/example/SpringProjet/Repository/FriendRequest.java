@@ -25,6 +25,10 @@ public class FriendRequest {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    public FriendRequest() {
+        this.id = null;
+    }
+
 
     public Long getId() {
         return id;
@@ -63,6 +67,13 @@ public class FriendRequest {
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public FriendRequest(Long senderId, Long receiverId, String status, LocalDateTime createdAt) {
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.status = status;
         this.createdAt = createdAt;
     }
 }
